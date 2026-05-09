@@ -172,7 +172,7 @@ document.addEventListener('touchmove', function(e) {
 var SB_URL='https://ytplmqepzayqimylfxsb.supabase.co';
 var SB_KEY='sb_publishable_V691cVZyp4n1sFZ7PPgByw_gULPIWmR';
 var sb=null, user=null, profile=null;
-var S={expenses:[],savings:[],debts:[],fixed:[],cc:[],tab:'home',fcat:'all',atype:'cash',scat:null,dtype:'inst',eid:null,etype:null};
+var S={expenses:[],savings:[],debts:[],fixed:[],cc:[],tab:'home',fcat:'all',atype:'cash',scat:null,dtype:'inst',eid:null,etype:null,hidden:false};
 
 var CATS=[
   {id:'food',lbl:'Comida',ico:'ti-tools-kitchen-2',col:'#10B981'},
@@ -186,6 +186,14 @@ var CATS=[
 ];
 function gc(id){return CATS.find(function(c){return c.id===id;})||CATS[7];}
 function fm(n){return'$'+Math.round(n||0).toLocaleString('es-AR');}
+function fmH(n){return S.hidden?'$ ***':fm(n);}
+function toggleHide(){
+  S.hidden=!S.hidden;
+  var ico=document.getElementById('eye-ico');
+  if(ico){ico.className='ti '+(S.hidden?'ti-eye':'ti-eye-off');}
+  // Update all fmH values on screen
+  go(S.tab);
+}
 function fd(s){if(!s)return'';var d=new Date(s+'T00:00:00');return d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'});}
 function fmo(s){if(!s)return'';var d=new Date(s+'-01T00:00:00');return d.toLocaleDateString('es-AR',{month:'long',year:'numeric'});}
 function tod(){return new Date().toISOString().split('T')[0];}
@@ -368,17 +376,17 @@ function renderApp(){
     +'<div class="page" id="pg-debts" style="display:none"></div>'
     +'<div class="page" id="pg-fixed" style="display:none"></div>'
     +'<div class="page" id="pg-cfg" style="display:none"></div>'
-    +'<nav class="bnav">'
-    +'<button class="ni on" id="ni-home" onclick="go("home")"><i class="ti ti-home-2"></i><span>Inicio</span></button>'
-    +'<button class="ni" id="ni-gastos" onclick="go("gastos")"><i class="ti ti-chart-bar"></i><span>Gastos</span></button>'
-    +'<div class="nfab"><button class="fab" onclick="openAdd()"><i class="ti ti-plus"></i></button></div>'
-    +'<button class="ni" id="ni-cc" onclick="go("cc")"><i class="ti ti-credit-card"></i><span>Tarjeta</span></button>'
-    +'<button class="ni" id="ni-sav" onclick="go("sav")"><i class="ti ti-coin"></i><span>Ahorros</span></button>'
-    +'</nav>'
+    +'<nav class="bnav">'    +'<button class="ni on" id="ni-home" data-tab="home" onclick="goBtn(this)"><i class="ti ti-home-2"></i><span>Inicio</span></button>'    +'<button class="ni" id="ni-gastos" data-tab="gastos" onclick="goBtn(this)"><i class="ti ti-chart-bar"></i><span>Gastos</span></button>'    +'<div class="nfab"><button class="fab" onclick="openAdd()"><i class="ti ti-plus"></i></button></div>'    +'<button class="ni" id="ni-cc" data-tab="cc" onclick="goBtn(this)"><i class="ti ti-credit-card"></i><span>Tarjeta</span></button>'    +'<button class="ni" id="ni-sav" data-tab="sav" onclick="goBtn(this)"><i class="ti ti-coin"></i><span>Ahorros</span></button>'    +'</nav>'
     +buildOverlays();
   go("home");
 }
 
+function goBtn(el){go(el.dataset.tab);}
+function setATd(el){setAT(el.dataset.t);}
+function setDTd(el){setDT(el.dataset.t);}
+function setFPd(el){setFP(el.dataset.t);}
+function openAddD(el){openAdd(el.dataset.t);}
+function swatD(el){swat(el.dataset.t);}
 function go(tab){
   ['home','gastos','cc','sav','debts','fixed','cfg'].forEach(function(t){
     var pg=R('pg-'+t);if(pg)pg.style.display=t===tab?'block':'none';
@@ -408,9 +416,9 @@ function bHome(){
   var h='<div class="hdr">';
   h+='<div class="hdr-top"><div class="hdr-av">'+(profile&&profile.name?profile.name[0].toUpperCase():'U')+'</div>';
   h+='<div class="hdr-name"><p>Bienvenido,</p><h2>'+(profile?profile.name||'Usuario':'Usuario')+'</h2></div>';
-  h+='<div class="hdr-btns"><button class="hdr-btn" onclick="openReport()"><i class="ti ti-download"></i></button><button class="hdr-btn" onclick="go("cfg")"><i class="ti ti-settings"></i></button></div></div>';
+  h+='<div class="hdr-btns"><button class="hdr-btn" onclick="toggleHide()"><i id="eye-ico" class="ti ti-eye-off"></i></button><button class="hdr-btn" onclick="openReport()"><i class="ti ti-download"></i></button><button class="hdr-btn" data-tab="cfg" onclick="goBtn(this)"><i class="ti ti-settings"></i></button></div></div>';
   h+='<div class="bal"><div class="bal-lbl">Disponible en cuenta / transferencia</div>';
-  h+='<div class="bal-amt">'+fm(Math.max(0,avail))+'</div>';
+  h+='<div class="bal-amt">'+fmH(Math.max(0,avail))+'</div>';
   h+='<div class="bal-sub">'+ml+'</div>';
   h+='<div class="bal-row"><div><div class="bm-lbl">Ingreso</div><div class="bm-val">'+fm(inc)+'</div></div>';
   h+='<div><div class="bm-lbl">Gastado</div><div class="bm-val">'+fm(cash)+'</div></div>';
@@ -418,13 +426,13 @@ function bHome(){
   if(dd>0)h+='<div><div class="bm-lbl">Deudas</div><div class="bm-val">'+fm(dd)+'</div></div>';
   if(fd>0)h+='<div><div class="bm-lbl">Fijos</div><div class="bm-val">'+fm(fd)+'</div></div>';
   h+='</div></div></div>';
-  if(ccd>0)h+='<div style="padding:12px 16px 0"><div style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:10px;border:1px solid #F59E0B"><i class="ti ti-credit-card" style="font-size:22px;color:#B45309;flex-shrink:0"></i><div style="flex:1"><p style="font-size:11px;color:#78350F;font-weight:700">Vence tarjeta este mes</p><h3 style="font-size:16px;font-weight:800;color:#78350F">'+fm(ccd)+'</h3></div><button onclick="go("cc")" style="background:rgba(180,83,9,.15);border:none;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#78350F;cursor:pointer">Ver</button></div></div>';
+  if(ccd>0)h+='<div style="padding:12px 16px 0"><div style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:10px;border:1px solid #F59E0B"><i class="ti ti-credit-card" style="font-size:22px;color:#B45309;flex-shrink:0"></i><div style="flex:1"><p style="font-size:11px;color:#78350F;font-weight:700">Vence tarjeta este mes</p><h3 style="font-size:16px;font-weight:800;color:#78350F">'+fm(ccd)+'</h3></div><button data-tab="cc" onclick="goBtn(this)" style="background:rgba(180,83,9,.15);border:none;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#78350F;cursor:pointer">Ver</button></div></div>';
   h+='<div class="sh"><div class="st">Resumen</div></div>';
   h+='<div class="cards">';
-  h+='<div class="card" onclick="go("sav")"><div class="cico" style="background:#10B981"><i class="ti ti-trending-up"></i></div><div class="clbl">Ahorrado</div><div class="cval" style="color:#10B981">'+fm(totSav)+'</div><div class="csub">ver ahorros</div></div>';
-  h+='<div class="card" onclick="go("debts")"><div class="cico" style="background:#EF4444"><i class="ti ti-trending-down"></i></div><div class="clbl">Deudas</div><div class="cval" style="color:#EF4444">'+fm(totDebt)+'</div><div class="csub">ver deudas</div></div>';
-  h+='<div class="card" onclick="go("cc")"><div class="cico" style="background:#F59E0B"><i class="ti ti-credit-card"></i></div><div class="clbl">Tarjeta TC</div><div class="cval" style="color:#F59E0B">'+fm(S.cc.reduce(function(a,e){return a+e.amount;},0))+'</div><div class="csub">ver detalle</div></div>';
-  h+='<div class="card" onclick="go("gastos")"><div class="cico" style="background:#8B5CF6"><i class="ti ti-chart-pie"></i></div><div class="clbl">Categorias</div><div class="cval">'+ac+'</div><div class="csub">ver desglose</div></div>';
+  h+='<div class="card" data-tab="sav" onclick="goBtn(this)"><div class="cico" style="background:#10B981"><i class="ti ti-trending-up"></i></div><div class="clbl">Ahorrado</div><div class="cval" style="color:#10B981">'+fm(totSav)+'</div><div class="csub">ver ahorros</div></div>';
+  h+='<div class="card" data-tab="debts" onclick="goBtn(this)"><div class="cico" style="background:#EF4444"><i class="ti ti-trending-down"></i></div><div class="clbl">Deudas</div><div class="cval" style="color:#EF4444">'+fm(totDebt)+'</div><div class="csub">ver deudas</div></div>';
+  h+='<div class="card" data-tab="cc" onclick="goBtn(this)"><div class="cico" style="background:#F59E0B"><i class="ti ti-credit-card"></i></div><div class="clbl">Tarjeta TC</div><div class="cval" style="color:#F59E0B">'+fm(S.cc.reduce(function(a,e){return a+e.amount;},0))+'</div><div class="csub">ver detalle</div></div>';
+  h+='<div class="card" data-tab="gastos" onclick="goBtn(this)"><div class="cico" style="background:#8B5CF6"><i class="ti ti-chart-pie"></i></div><div class="clbl">Categorias</div><div class="cval">'+ac+'</div><div class="csub">ver desglose</div></div>';
   h+='</div>';
   h+='<div class="sh"><div style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="toggleR()"><div class="st">Gastos recientes</div><i id="rarr" class="ti ti-chevron-down" style="font-size:16px;color:#94A3B8"></i></div><button class="sa" onclick="openAdd()">+ Agregar</button></div>';
   h+='<div class="chips">';
@@ -510,7 +518,7 @@ function bCC(){
   var byM={};
   S.cc.forEach(function(e){var k=e.cc_due_date?e.cc_due_date.substring(0,7):'sin-fecha';if(!byM[k])byM[k]=[];byM[k].push(e);});
   var months=Object.keys(byM).sort();
-  var h='<div style="padding-top:50px"><div class="sh"><div class="st">Tarjeta de Credito</div><button class="sa" onclick="openAdd("card")">+ Gasto TC</button></div></div>';
+  var h='<div style="padding-top:50px"><div class="sh"><div class="st">Tarjeta de Credito</div><button class="sa" data-t="card" onclick="openAddD(this)">+ Gasto TC</button></div></div>';
   h+='<div class="cc-vis"><div style="font-size:12px;color:rgba(255,255,255,.6);margin-bottom:4px">Total en tarjeta</div>';
   h+='<div style="font-size:30px;font-weight:800">'+fm(tot)+'</div>';
   h+='<div style="display:flex;justify-content:space-between;margin-top:12px"><div><p style="font-size:11px;color:rgba(255,255,255,.6)">Vence este mes</p><span style="font-size:14px;font-weight:700">'+fm(due)+'</span></div><div><p style="font-size:11px;color:rgba(255,255,255,.6)">Gastos</p><span style="font-size:14px;font-weight:700">'+S.cc.length+'</span></div></div></div>';
@@ -568,7 +576,7 @@ function bDebts(){
   var cm=curYM();
   var totP=S.debts.reduce(function(a,d){return a+(d.total-(d.paid||0));},0);
   var dueM=debtDue();
-  var h='<div style="padding-top:50px"><div class="sh"><div class="st">Deudas</div><button class="sa" onclick="openAdd("debt")">+ Nueva</button></div></div>';
+  var h='<div style="padding-top:50px"><div class="sh"><div class="st">Deudas</div><button class="sa" data-t="debt" onclick="openAddD(this)">+ Nueva</button></div></div>';
   h+='<div style="margin:0 16px 14px;background:linear-gradient(135deg,#FEE2E2,#FECACA);border-radius:16px;padding:18px;border:1px solid #FCA5A5">';
   h+='<div style="font-size:13px;color:#7F1D1D;font-weight:700">Total pendiente</div>';
   h+='<div style="font-size:30px;font-weight:800;color:#B91C1C">'+fm(totP)+'</div>';
@@ -626,7 +634,7 @@ function tgDebt(id){
 function bFixed(){
   var act=S.fixed.filter(function(f){return f.active;}),inact=S.fixed.filter(function(f){return !f.active;});
   var tot=act.reduce(function(a,f){return a+f.amount;},0);
-  var h='<div style="padding-top:50px"><div class="sh"><div class="st">Gastos Fijos</div><button class="sa" onclick="openAdd("fixed")">+ Agregar</button></div></div>';
+  var h='<div style="padding-top:50px"><div class="sh"><div class="st">Gastos Fijos</div><button class="sa" data-t="fixed" onclick="openAddD(this)">+ Agregar</button></div></div>';
   h+='<div style="margin:0 16px 14px;background:linear-gradient(135deg,#0891B2,#06B6D4);border-radius:16px;padding:18px">';
   h+='<div style="font-size:12px;color:rgba(255,255,255,.75);font-weight:700">Total mensual fijo</div>';
   h+='<div style="font-size:28px;font-weight:800;color:#fff">'+fm(tot)+'</div>';
@@ -655,7 +663,7 @@ function bCfg(){
   var ts=S.savings.reduce(function(a,s){return a+s.amount;},0);
   var td=S.debts.reduce(function(a,d){return a+(d.total-(d.paid||0));},0);
   var tff=S.fixed.filter(function(f){return f.active;}).reduce(function(a,f){return a+f.amount;},0);
-  var h='<div style="padding-top:50px"><div class="sh"><div class="st">Configuracion</div><button class="sa" onclick="go("home")">x Cerrar</button></div></div>';
+  var h='<div style="padding-top:50px"><div class="sh"><div class="st">Configuracion</div><button class="sa" data-tab="home" onclick="goBtn(this)">x Cerrar</button></div></div>';
   h+='<div style="padding:0 16px 14px"><div style="background:linear-gradient(135deg,#4F46E5,#3730A3);border-radius:16px;padding:18px;display:flex;align-items:center;gap:12px">';
   h+='<div style="width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;border:2px solid rgba(255,255,255,.35)">'+(profile&&profile.name?profile.name[0].toUpperCase():'U')+'</div>';
   h+='<div><div style="font-size:16px;font-weight:800;color:#fff">'+(profile?profile.name||'Usuario':'Usuario')+'</div>';
@@ -664,9 +672,9 @@ function bCfg(){
   h+='<div class="cfg-row" onclick="openIncome()"><i class="ti ti-cash" style="font-size:20px;color:#4F46E5;width:26px"></i><div class="cfg-info"><h3>Ingreso mensual</h3><p>'+fm(profile?profile.income||0:0)+'/mes</p></div><i class="ti ti-chevron-right" style="font-size:17px;color:#94A3B8"></i></div>';
   h+='<div class="cfg-row" onclick="openPw()"><i class="ti ti-lock" style="font-size:20px;color:#4F46E5;width:26px"></i><div class="cfg-info"><h3>Cambiar contrasena</h3><p>Actualiza tu contrasena</p></div><i class="ti ti-chevron-right" style="font-size:17px;color:#94A3B8"></i></div>';
   h+='<div style="padding:12px 16px 6px;font-size:10px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.06em">Finanzas</div>';
-  h+='<div class="cfg-row" onclick="go("sav")"><i class="ti ti-coin" style="font-size:20px;color:#10B981;width:26px"></i><div class="cfg-info"><h3>Mis ahorros</h3><p>'+fm(ts)+' acumulados</p></div><i class="ti ti-chevron-right" style="font-size:17px;color:#94A3B8"></i></div>';
-  h+='<div class="cfg-row" onclick="go("debts")"><i class="ti ti-alert-circle" style="font-size:20px;color:#EF4444;width:26px"></i><div class="cfg-info"><h3>Mis deudas</h3><p>'+S.debts.length+' deuda'+(S.debts.length!==1?'s':'')+' - '+fm(td)+' pendiente</p></div><i class="ti ti-chevron-right" style="font-size:17px;color:#94A3B8"></i></div>';
-  h+='<div class="cfg-row" onclick="go("fixed")"><i class="ti ti-repeat" style="font-size:20px;color:#06B6D4;width:26px"></i><div class="cfg-info"><h3>Gastos fijos</h3><p>'+S.fixed.filter(function(f){return f.active;}).length+' activos - '+fm(tff)+'/mes</p></div><i class="ti ti-chevron-right" style="font-size:17px;color:#94A3B8"></i></div>';
+  h+='<div class="cfg-row" data-tab="sav" onclick="goBtn(this)"><i class="ti ti-coin" style="font-size:20px;color:#10B981;width:26px"></i><div class="cfg-info"><h3>Mis ahorros</h3><p>'+fm(ts)+' acumulados</p></div><i class="ti ti-chevron-right" style="font-size:17px;color:#94A3B8"></i></div>';
+  h+='<div class="cfg-row" data-tab="debts" onclick="goBtn(this)"><i class="ti ti-alert-circle" style="font-size:20px;color:#EF4444;width:26px"></i><div class="cfg-info"><h3>Mis deudas</h3><p>'+S.debts.length+' deuda'+(S.debts.length!==1?'s':'')+' - '+fm(td)+' pendiente</p></div><i class="ti ti-chevron-right" style="font-size:17px;color:#94A3B8"></i></div>';
+  h+='<div class="cfg-row" data-tab="fixed" onclick="goBtn(this)"><i class="ti ti-repeat" style="font-size:20px;color:#06B6D4;width:26px"></i><div class="cfg-info"><h3>Gastos fijos</h3><p>'+S.fixed.filter(function(f){return f.active;}).length+' activos - '+fm(tff)+'/mes</p></div><i class="ti ti-chevron-right" style="font-size:17px;color:#94A3B8"></i></div>';
   h+='<div style="padding:8px 16px"><button class="bdng" onclick="doLogout()"><i class="ti ti-logout" style="font-size:15px;vertical-align:-2px;margin-right:6px"></i>Cerrar sesion</button></div>';
   h+='<div style="text-align:center;padding:16px;font-size:11px;color:#94A3B8">Mi Presupuesto v2.0</div>';
   return h;
@@ -681,10 +689,10 @@ function buildOverlays(){
     +'<div class="sht-bdy">'
     +'<div class="fg"><label class="fl">Tipo</label>'
     +'<div class="tabs" style="flex-wrap:wrap;gap:3px">'
-    +'<button class="tb on" id="t-cash" onclick="setAT("cash")" style="flex:1">Efec/Transf</button>'
-    +'<button class="tb" id="t-card" onclick="setAT("card")" style="flex:1">Tarjeta</button>'
-    +'<button class="tb" id="t-debt" onclick="setAT("debt")" style="flex:1">Deuda</button>'
-    +'<button class="tb" id="t-fixed" onclick="setAT("fixed")" style="flex:1">Gasto Fijo</button>'
+    +'<button class="tb on" id="t-cash" data-t="cash" onclick="setATd(this)" style="flex:1">Efec/Transf</button>'
+    +'<button class="tb" id="t-card" data-t="card" onclick="setATd(this)" style="flex:1">Tarjeta</button>'
+    +'<button class="tb" id="t-debt" data-t="debt" onclick="setATd(this)" style="flex:1">Deuda</button>'
+    +'<button class="tb" id="t-fixed" data-t="fixed" onclick="setATd(this)" style="flex:1">Gasto Fijo</button>'
     +'</div></div>'
     +'<div id="ef">'
     +'<div class="fg"><label class="fl">Descripcion</label><input class="fi" type="text" id="an2" placeholder="Ej: Supermercado Coto" oninput="onNameI(this.value)"></div>'
@@ -695,7 +703,7 @@ function buildOverlays(){
     +'</div>'
     +'<div id="df" style="display:none">'
     +'<div class="fg"><label class="fl">Nombre de la deuda</label><input class="fi" type="text" id="dn"></div>'
-    +'<div class="fg"><label class="fl">Tipo</label><div class="tabs"><button class="tb on" id="dt-i" onclick="setDT("inst")">En cuotas</button><button class="tb" id="dt-l" onclick="setDT("lump")">Monto total</button></div></div>'
+    +'<div class="fg"><label class="fl">Tipo</label><div class="tabs"><button class="tb on" id="dt-i" data-t="inst" onclick="setDTd(this)">En cuotas</button><button class="tb" id="dt-l" data-t="lump" onclick="setDTd(this)">Monto total</button></div></div>'
     +'<div id="di-f">'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
     +'<div class="fg"><label class="fl">Monto por cuota</label><input class="fi" type="number" id="dia" placeholder="0" inputmode="numeric" oninput="updDP()"></div>'
@@ -717,7 +725,7 @@ function buildOverlays(){
     +'<div class="fg"><label class="fl">Nombre</label><input class="fi" type="text" id="fn2" placeholder="Ej: Netflix, Internet, Gas..." oninput="onFxI(this.value)"></div>'
     +'<div id="fx-chip" style="display:none;margin-top:-4px"><div id="fx-r" style="display:flex;align-items:center;gap:8px;background:#EEF2FF;border:1.5px solid #4F46E5;border-radius:20px;padding:5px 12px"><i id="fx-ico" class="ti" style="font-size:15px;color:#4F46E5"></i><span id="fx-lbl" style="font-size:13px;font-weight:700;color:#4F46E5"></span></div></div>'
     +'<div class="fg"><label class="fl">Monto mensual</label><input class="fi" type="number" id="fa" placeholder="0" inputmode="numeric" style="font-size:20px;font-weight:800"></div>'
-    +'<div class="fg"><label class="fl">Tipo de pago</label><div class="tabs"><button class="tb on" id="fp-c" onclick="setFP("cash")">Efec/Transf</button><button class="tb" id="fp-k" onclick="setFP("card")">Tarjeta</button></div></div>'
+    +'<div class="fg"><label class="fl">Tipo de pago</label><div class="tabs"><button class="tb on" id="fp-c" data-t="cash" onclick="setFPd(this)">Efec/Transf</button><button class="tb" id="fp-k" data-t="card" onclick="setFPd(this)">Tarjeta</button></div></div>'
     +'<div class="info">Se descuenta del disponible cada mes. Puedes pausarlo cuando quieras.</div>'
     +'</div>'
     +'<button class="bmain" id="add-btn" onclick="submitAdd()">Guardar</button>'
@@ -1084,7 +1092,7 @@ function openReport(){
     +'<div class="sc" style="border-left:4px solid #3B82F6"><div class="sl">Ingreso del mes</div><div class="sv">'+fm(inc)+'</div></div>'
     +'<div class="sc" style="border-left:4px solid #EF4444"><div class="sl">Total gastado</div><div class="sv">'+fm(totS)+'</div><div style="font-size:11px;color:#94A3B8">Efec: '+fm(cashS)+' TC: '+fm(cardS)+'</div></div>'
     +'<div class="sc" style="border-left:4px solid #10B981"><div class="sl">Ahorrado</div><div class="sv">'+fm(totSav)+'</div></div>'
-    +'<div class="sc" style="border-left:4px solid #8B5CF6"><div class="sl">Disponible estimado</div><div class="sv">'+fm(Math.max(0,avail))+'</div></div>'
+    +'<div class="sc" style="border-left:4px solid #8B5CF6"><div class="sl">Disponible estimado</div><div class="sv">'+fmH(Math.max(0,avail))+'</div></div>'
     +'</div>';
   if(aCats.length){
     html+='<div class="sec"><div class="sec-t">Gastos por categoria</div>';
