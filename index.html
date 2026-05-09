@@ -190,7 +190,7 @@ function fmH(n){return S.hidden?'$ ***':fm(n);}
 function toggleHide(){
   S.hidden=!S.hidden;
   var ico=document.getElementById('eye-ico');
-  if(ico){ico.className='ti '+(S.hidden?'ti-eye':'ti-eye-off');}
+  if(ico){ico.className='ti '+(S.hidden?'ti-eye-off':'ti-eye');}
   // Update all fmH values on screen
   go(S.tab);
 }
@@ -329,7 +329,7 @@ function debtDue(){
     if(d.installments&&d.installment_amount&&d.start_month){
       return a+getInst(d).filter(function(i){return i.month===m;}).reduce(function(s,i){return s+i.amount;},0);
     }
-    if(d.due_date&&d.due_date.substring(0,7)===m&&(d.paid||0)<d.total)return a+(d.total-(d.paid||0));
+    if(d.due_date&&d.due_date.substring(0,7)===m)return a+d.total;
     return a;
   },0);
 }
@@ -416,22 +416,22 @@ function bHome(){
   var h='<div class="hdr">';
   h+='<div class="hdr-top"><div class="hdr-av">'+(profile&&profile.name?profile.name[0].toUpperCase():'U')+'</div>';
   h+='<div class="hdr-name"><p>Bienvenido,</p><h2>'+(profile?profile.name||'Usuario':'Usuario')+'</h2></div>';
-  h+='<div class="hdr-btns"><button class="hdr-btn" onclick="toggleHide()"><i id="eye-ico" class="ti ti-eye-off"></i></button><button class="hdr-btn" onclick="openReport()"><i class="ti ti-download"></i></button><button class="hdr-btn" data-tab="cfg" onclick="goBtn(this)"><i class="ti ti-settings"></i></button></div></div>';
+  h+='<div class="hdr-btns"><button class="hdr-btn" onclick="toggleHide()"><i id="eye-ico" class="ti ti-eye"></i></button><button class="hdr-btn" onclick="openReport()"><i class="ti ti-download"></i></button><button class="hdr-btn" data-tab="cfg" onclick="goBtn(this)"><i class="ti ti-settings"></i></button></div></div>';
   h+='<div class="bal"><div class="bal-lbl">Disponible en cuenta / transferencia</div>';
   h+='<div class="bal-amt">'+fmH(Math.max(0,avail))+'</div>';
   h+='<div class="bal-sub">'+ml+'</div>';
-  h+='<div class="bal-row"><div><div class="bm-lbl">Ingreso</div><div class="bm-val">'+fm(inc)+'</div></div>';
-  h+='<div><div class="bm-lbl">Gastado</div><div class="bm-val">'+fm(cash)+'</div></div>';
-  if(ccd>0)h+='<div><div class="bm-lbl">TC mes</div><div class="bm-val">'+fm(ccd)+'</div></div>';
-  if(dd>0)h+='<div><div class="bm-lbl">Deudas</div><div class="bm-val">'+fm(dd)+'</div></div>';
-  if(fd>0)h+='<div><div class="bm-lbl">Fijos</div><div class="bm-val">'+fm(fd)+'</div></div>';
+  h+='<div class="bal-row"><div><div class="bm-lbl">Ingreso</div><div class="bm-val">'+fmH(inc)+'</div></div>';
+  h+='<div><div class="bm-lbl">Gastado</div><div class="bm-val">'+fmH(cash)+'</div></div>';
+  if(ccd>0)h+='<div><div class="bm-lbl">TC mes</div><div class="bm-val">'+fmH(ccd)+'</div></div>';
+  if(dd>0)h+='<div><div class="bm-lbl">Deudas</div><div class="bm-val">'+fmH(dd)+'</div></div>';
+  if(fd>0)h+='<div><div class="bm-lbl">Fijos</div><div class="bm-val">'+fmH(fd)+'</div></div>';
   h+='</div></div></div>';
   if(ccd>0)h+='<div style="padding:12px 16px 0"><div style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:10px;border:1px solid #F59E0B"><i class="ti ti-credit-card" style="font-size:22px;color:#B45309;flex-shrink:0"></i><div style="flex:1"><p style="font-size:11px;color:#78350F;font-weight:700">Vence tarjeta este mes</p><h3 style="font-size:16px;font-weight:800;color:#78350F">'+fm(ccd)+'</h3></div><button data-tab="cc" onclick="goBtn(this)" style="background:rgba(180,83,9,.15);border:none;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#78350F;cursor:pointer">Ver</button></div></div>';
   h+='<div class="sh"><div class="st">Resumen</div></div>';
   h+='<div class="cards">';
-  h+='<div class="card" data-tab="sav" onclick="goBtn(this)"><div class="cico" style="background:#10B981"><i class="ti ti-trending-up"></i></div><div class="clbl">Ahorrado</div><div class="cval" style="color:#10B981">'+fm(totSav)+'</div><div class="csub">ver ahorros</div></div>';
-  h+='<div class="card" data-tab="debts" onclick="goBtn(this)"><div class="cico" style="background:#EF4444"><i class="ti ti-trending-down"></i></div><div class="clbl">Deudas</div><div class="cval" style="color:#EF4444">'+fm(totDebt)+'</div><div class="csub">ver deudas</div></div>';
-  h+='<div class="card" data-tab="cc" onclick="goBtn(this)"><div class="cico" style="background:#F59E0B"><i class="ti ti-credit-card"></i></div><div class="clbl">Tarjeta TC</div><div class="cval" style="color:#F59E0B">'+fm(S.cc.reduce(function(a,e){return a+e.amount;},0))+'</div><div class="csub">ver detalle</div></div>';
+  h+='<div class="card" data-tab="sav" onclick="goBtn(this)"><div class="cico" style="background:#10B981"><i class="ti ti-trending-up"></i></div><div class="clbl">Ahorrado</div><div class="cval" style="color:#10B981">'+fmH(totSav)+'</div><div class="csub">ver ahorros</div></div>';
+  h+='<div class="card" data-tab="debts" onclick="goBtn(this)"><div class="cico" style="background:#EF4444"><i class="ti ti-trending-down"></i></div><div class="clbl">Deudas</div><div class="cval" style="color:#EF4444">'+fmH(totDebt)+'</div><div class="csub">ver deudas</div></div>';
+  h+='<div class="card" data-tab="cc" onclick="goBtn(this)"><div class="cico" style="background:#F59E0B"><i class="ti ti-credit-card"></i></div><div class="clbl">Tarjeta TC</div><div class="cval" style="color:#F59E0B">'+fmH(S.cc.reduce(function(a,e){return a+e.amount;},0))+'</div><div class="csub">ver detalle</div></div>';
   h+='<div class="card" data-tab="gastos" onclick="goBtn(this)"><div class="cico" style="background:#8B5CF6"><i class="ti ti-chart-pie"></i></div><div class="clbl">Categorias</div><div class="cval">'+ac+'</div><div class="csub">ver desglose</div></div>';
   h+='</div>';
   h+='<div class="sh"><div style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="toggleR()"><div class="st">Gastos recientes</div><i id="rarr" class="ti ti-chevron-down" style="font-size:16px;color:#94A3B8"></i></div><button class="sa" onclick="openAdd()">+ Agregar</button></div>';
