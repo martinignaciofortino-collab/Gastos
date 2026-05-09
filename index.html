@@ -404,6 +404,9 @@ function go(tab){
 function bHome(){
   var inc=profile?profile.income||0:0;
   var cash=S.expenses.filter(function(e){return e.type==='cash';}).reduce(function(a,e){return a+e.amount;},0);
+  var fixedCash=S.fixed.filter(function(f){return f.active&&f.pay_type!=='card';}).reduce(function(a,f){return a+f.amount;},0);
+  var fixedCard=S.fixed.filter(function(f){return f.active&&f.pay_type==='card';}).reduce(function(a,f){return a+f.amount;},0);
+  var gastadoTotal=cash+fixedCash;
   var ccd=ccDue(),dd=debtDue(),fd=fixedDue();
   var avail=inc-cash-ccd-dd-fd;
   var totSav=S.savings.reduce(function(a,s){return a+s.amount;},0);
@@ -416,12 +419,12 @@ function bHome(){
   var h='<div class="hdr">';
   h+='<div class="hdr-top"><div class="hdr-av">'+(profile&&profile.name?profile.name[0].toUpperCase():'U')+'</div>';
   h+='<div class="hdr-name"><p>Bienvenido,</p><h2>'+(profile?profile.name||'Usuario':'Usuario')+'</h2></div>';
-  h+='<div class="hdr-btns"><button class="hdr-btn" onclick="toggleHide()"><i id="eye-ico" class="ti ti-eye"></i></button><button class="hdr-btn" onclick="openReport()"><i class="ti ti-download"></i></button><button class="hdr-btn" data-tab="cfg" onclick="goBtn(this)"><i class="ti ti-settings"></i></button></div></div>';
+  h+='<div class="hdr-btns"><button class="hdr-btn" onclick="toggleHide()"><i id="eye-ico" class="ti '+(S.hidden?'ti-eye-off':'ti-eye')+'"></i></button><button class="hdr-btn" onclick="openReport()"><i class="ti ti-download"></i></button><button class="hdr-btn" data-tab="cfg" onclick="goBtn(this)"><i class="ti ti-settings"></i></button></div></div>';
   h+='<div class="bal"><div class="bal-lbl">Disponible en cuenta / transferencia</div>';
   h+='<div class="bal-amt">'+fmH(Math.max(0,avail))+'</div>';
   h+='<div class="bal-sub">'+ml+'</div>';
   h+='<div class="bal-row"><div><div class="bm-lbl">Ingreso</div><div class="bm-val">'+fmH(inc)+'</div></div>';
-  h+='<div><div class="bm-lbl">Gastado</div><div class="bm-val">'+fmH(cash)+'</div></div>';
+  h+='<div><div class="bm-lbl">Gastado</div><div class="bm-val">'+fmH(gastadoTotal)+'</div></div>';
   if(ccd>0)h+='<div><div class="bm-lbl">TC mes</div><div class="bm-val">'+fmH(ccd)+'</div></div>';
   if(dd>0)h+='<div><div class="bm-lbl">Deudas</div><div class="bm-val">'+fmH(dd)+'</div></div>';
   if(fd>0)h+='<div><div class="bm-lbl">Fijos</div><div class="bm-val">'+fmH(fd)+'</div></div>';
@@ -471,13 +474,18 @@ function toggleR(){
 
 // GASTOS
 function bGastos(){
-  var tAll=S.expenses.reduce(function(a,e){return a+e.amount;},0);
   var tCash=S.expenses.filter(function(e){return e.type==='cash';}).reduce(function(a,e){return a+e.amount;},0);
   var tCard=S.expenses.filter(function(e){return e.type==='card';}).reduce(function(a,e){return a+e.amount;},0);
+  var tFixedCash=S.fixed.filter(function(f){return f.active&&f.pay_type!=='card';}).reduce(function(a,f){return a+f.amount;},0);
+  var tFixedCard=S.fixed.filter(function(f){return f.active&&f.pay_type==='card';}).reduce(function(a,f){return a+f.amount;},0);
+  var tAll=(tCash+tFixedCash)+(tCard+tFixedCard);
   var cd=CATS.map(function(c){
     var cash=S.expenses.filter(function(e){return e.category===c.id&&e.type==='cash';}).reduce(function(a,e){return a+e.amount;},0);
     var card=S.expenses.filter(function(e){return e.category===c.id&&e.type==='card';}).reduce(function(a,e){return a+e.amount;},0);
-    return{id:c.id,lbl:c.lbl,ico:c.ico,col:c.col,cash:cash,card:card,total:cash+card};
+    // Add active fixed expenses to their category
+    var fxCash=S.fixed.filter(function(f){return f.active&&f.category===c.id&&f.pay_type!=='card';}).reduce(function(a,f){return a+f.amount;},0);
+    var fxCard=S.fixed.filter(function(f){return f.active&&f.category===c.id&&f.pay_type==='card';}).reduce(function(a,f){return a+f.amount;},0);
+    return{id:c.id,lbl:c.lbl,ico:c.ico,col:c.col,cash:cash+fxCash,card:card+fxCard,total:cash+fxCash+card+fxCard};
   }).filter(function(c){return c.total>0;}).sort(function(a,b){return b.total-a.total;});
   var maxT=cd.length?cd[0].total:1;
   var h='<div style="padding-top:50px"><div class="sh"><div class="st">Mis Gastos</div></div></div>';
