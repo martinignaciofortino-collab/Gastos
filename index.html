@@ -150,7 +150,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);font-family:-apple-sy
 const SUPABASE_URL='https://ytplmqepzayqimylfxsb.supabase.co';
 const SUPABASE_ANON_KEY='sb_publishable_V691cVZyp4n1sFZ7PPgByw_gULPIWmR';
 const DEMO_MODE=SUPABASE_URL.includes('TU_PROYECTO');
-const createClient=(supabase.createClient||supabase.default&&supabase.default.createClient);
+let createClient=null; // resolved in init()
 let sb=null,currentUser=null,userProfile=null;
 let state={expenses:[],savings:[],debts:[],fixedExpenses:[],ccExpenses:[],activeTab:'home',filterCat:'all',addType:'cash',selectedCat:null,debtType:'installment',editingId:null,editingType:null};
 
@@ -176,6 +176,9 @@ const gel=id=>document.getElementById(id);
 async function init(){
   try {
     if(DEMO_MODE){loadDemo();return;}
+    createClient=supabase.createClient||
+      (supabase.default&&supabase.default.createClient);
+    if(!createClient) throw new Error('Supabase no cargado');
     sb=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
     const {data:{session}}=await sb.auth.getSession();
     if(session){currentUser=session.user;await loadData();renderApp();}
